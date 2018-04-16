@@ -361,11 +361,17 @@ public class MenuEntrySwapperPlugin extends Plugin
 				swap("jatizso", option, target, true);
 				swap("neitiznot", option, target, true);
 				swap("rellekka", option, target, true);
+				swap("follow", option, target, true);
 			}
 
 			if (config.swapPay())
 			{
 				swap("pay", option, target, true);
+			}
+
+			if (config.swapHeal())
+			{
+				swap("heal", option, target, true);
 			}
 		}
 		else if (config.swapHarpoon() && option.equals("cage"))
