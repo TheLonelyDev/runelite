@@ -30,6 +30,7 @@ import com.google.common.eventbus.Subscribe;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,8 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+
+import static net.runelite.api.widgets.WidgetInfo.CHATBOX;
 import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
 import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
 import net.runelite.api.widgets.WidgetItem;
@@ -74,6 +77,24 @@ public class ExaminePlugin extends Plugin
 	private final Cache<CacheKey, Boolean> cache = CacheBuilder.newBuilder()
 		.maximumSize(128L)
 		.build();
+
+	private static final HashMap<String, Integer> herbs = new HashMap<String, Integer>()
+	{{
+		put("guam leaf", 199);
+		put("tarromin", 203);
+		put("ranarr weed", 207);
+		put("avantoe", 211);
+		put("snapdragon", 3051);
+		put("marrentil", 201);
+		put("harralander", 205);
+		put("kwuarm", 213);
+		put("toadflax", 3049);
+		put("cadantine", 215);
+		put("lantadyme", 2485);
+		put("dwarf weed", 217);
+		put("torstol", 219);
+		put("irit leaf", 209);
+	}};
 
 	@Inject
 	private Client client;
@@ -138,6 +159,19 @@ public class ExaminePlugin extends Plugin
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
+		if (event.getType() == ChatMessageType.SERVER && event.getMessage().contains("Grimy"))
+		{
+			String name = new String(event.getMessage().replaceAll(".* x Grimy ", "").trim().toLowerCase());
+
+			PendingExamine pendingExamine = new PendingExamine();
+			pendingExamine.setWidgetId(CHATBOX.getId());
+			pendingExamine.setActionParam(Integer.parseInt(event.getMessage().replaceAll( " x Grimy .*", "")));
+			pendingExamine.setType(ExamineType.ITEM_BANK_EQ);
+			pendingExamine.setId(herbs.get(name));
+			pendingExamine.setCreated(Instant.now());
+			pending.push(pendingExamine);
+		}
+
 		ExamineType type;
 		switch (event.getType())
 		{
@@ -191,11 +225,18 @@ public class ExaminePlugin extends Plugin
 		int quantity = 1;
 		int itemId = -1;
 
-		// Get widget
-		int widgetId = pendingExamine.getWidgetId();
-		int widgetGroup = TO_GROUP(widgetId);
-		int widgetChild = TO_CHILD(widgetId);
-		Widget widget = client.getWidget(widgetGroup, widgetChild);
+		if (pendingExamine.getWidgetId() == CHATBOX.getId())
+		{
+			quantity = pendingExamine.getActionParam();
+			itemId = pendingExamine.getId();
+		}
+		else
+		{
+			// Get widget
+			int widgetId = pendingExamine.getWidgetId();
+			int widgetGroup = TO_GROUP(widgetId);
+			int widgetChild = TO_CHILD(widgetId);
+			Widget widget = client.getWidget(widgetGroup, widgetChild);
 
 		if (widget == null)
 		{
