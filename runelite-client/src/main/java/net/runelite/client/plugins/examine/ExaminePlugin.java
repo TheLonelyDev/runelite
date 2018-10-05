@@ -42,7 +42,6 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
-
 import static net.runelite.api.widgets.WidgetInfo.CHATBOX;
 import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
 import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
@@ -63,9 +62,9 @@ import net.runelite.http.api.examine.ExamineClient;
  * @author Adam
  */
 @PluginDescriptor(
-	name = "Examine",
-	description = "Send examine information to the API",
-	tags = {"npcs", "items", "inventory", "objects"}
+		name = "Examine",
+		description = "Send examine information to the API",
+		tags = {"npcs", "items", "inventory", "objects"}
 )
 @Slf4j
 public class ExaminePlugin extends Plugin
@@ -75,8 +74,8 @@ public class ExaminePlugin extends Plugin
 	private final ExamineClient examineClient = new ExamineClient();
 	private final Deque<PendingExamine> pending = new ArrayDeque<>();
 	private final Cache<CacheKey, Boolean> cache = CacheBuilder.newBuilder()
-		.maximumSize(128L)
-		.build();
+			.maximumSize(128L)
+			.build();
 
 	private static final HashMap<String, Integer> herbs = new HashMap<String, Integer>()
 	{{
@@ -238,75 +237,76 @@ public class ExaminePlugin extends Plugin
 			int widgetChild = TO_CHILD(widgetId);
 			Widget widget = client.getWidget(widgetGroup, widgetChild);
 
-		if (widget == null)
-		{
-			return;
-		}
+			if (widget == null)
+			{
+				return;
+			}
 
-		if (pendingExamine.getType() == ExamineType.ITEM)
-		{
-			WidgetItem widgetItem = widget.getWidgetItem(pendingExamine.getActionParam());
-			quantity = widgetItem != null ? widgetItem.getQuantity() : 1;
-			itemId = pendingExamine.getId();
-		}
-		else if (pendingExamine.getType() == ExamineType.ITEM_BANK_EQ)
-		{
-			if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup)
+			if (pendingExamine.getType() == ExamineType.ITEM)
 			{
-				Widget widgetItem = widget.getChild(1);
-				if (widgetItem != null)
-				{
-					quantity = widgetItem.getItemQuantity();
-					itemId = widgetItem.getItemId();
-				}
+				WidgetItem widgetItem = widget.getWidgetItem(pendingExamine.getActionParam());
+				quantity = widgetItem != null ? widgetItem.getQuantity() : 1;
+				itemId = pendingExamine.getId();
 			}
-			else if (WidgetInfo.SMITHING_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup)
+			else if (pendingExamine.getType() == ExamineType.ITEM_BANK_EQ)
 			{
-				Widget widgetItem = widget.getChild(2);
-				if (widgetItem != null)
+				if (WidgetInfo.EQUIPMENT.getGroupId() == widgetGroup)
 				{
-					quantity = widgetItem.getItemQuantity();
-					itemId = widgetItem.getItemId();
+					Widget widgetItem = widget.getChild(1);
+					if (widgetItem != null)
+					{
+						quantity = widgetItem.getItemQuantity();
+						itemId = widgetItem.getItemId();
+					}
 				}
-			}
-			else if (WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup
-					|| WidgetInfo.RUNE_POUCH_ITEM_CONTAINER.getGroupId() == widgetGroup)
-			{
-				Widget widgetItem = widget.getChild(pendingExamine.getActionParam());
-				if (widgetItem != null)
+				else if (WidgetInfo.SMITHING_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup)
 				{
-					quantity = widgetItem.getItemQuantity();
-					itemId = widgetItem.getItemId();
+					Widget widgetItem = widget.getChild(2);
+					if (widgetItem != null)
+					{
+						quantity = widgetItem.getItemQuantity();
+						itemId = widgetItem.getItemId();
+					}
 				}
-			}
-			else if (WidgetInfo.BANK_ITEM_CONTAINER.getGroupId() == widgetGroup)
-			{
-				Widget[] children = widget.getDynamicChildren();
-				if (pendingExamine.getActionParam() < children.length)
+				else if (WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getGroupId() == widgetGroup
+						|| WidgetInfo.RUNE_POUCH_ITEM_CONTAINER.getGroupId() == widgetGroup)
 				{
-					Widget widgetItem = children[pendingExamine.getActionParam()];
-					quantity = widgetItem.getItemQuantity();
-					itemId = widgetItem.getItemId();
+					Widget widgetItem = widget.getChild(pendingExamine.getActionParam());
+					if (widgetItem != null)
+					{
+						quantity = widgetItem.getItemQuantity();
+						itemId = widgetItem.getItemId();
+					}
 				}
-			}
-			else if (WidgetInfo.SHOP_ITEMS_CONTAINER.getGroupId() == widgetGroup)
-			{
-				Widget[] children = widget.getDynamicChildren();
-				if (pendingExamine.getActionParam() < children.length)
+				else if (WidgetInfo.BANK_ITEM_CONTAINER.getGroupId() == widgetGroup)
 				{
-					Widget widgetItem = children[pendingExamine.getActionParam()];
-					quantity = 1;
-					itemId = widgetItem.getItemId();
+					Widget[] children = widget.getDynamicChildren();
+					if (pendingExamine.getActionParam() < children.length)
+					{
+						Widget widgetItem = children[pendingExamine.getActionParam()];
+						quantity = widgetItem.getItemQuantity();
+						itemId = widgetItem.getItemId();
+					}
 				}
-			}
-			else if (WidgetInfo.CLUE_SCROLL_REWARD_ITEM_CONTAINER.getGroupId() == widgetGroup)
-			{
-				Widget[] children = widget.getDynamicChildren();
-				if (pendingExamine.getActionParam() < children.length)
+				else if (WidgetInfo.SHOP_ITEMS_CONTAINER.getGroupId() == widgetGroup)
 				{
-					Widget widgetItem = children[pendingExamine.getActionParam()];
-					quantity = widgetItem.getItemQuantity();
-					itemId = widgetItem.getItemId();
+					Widget[] children = widget.getDynamicChildren();
+					if (pendingExamine.getActionParam() < children.length)
+					{
+						Widget widgetItem = children[pendingExamine.getActionParam()];
+						quantity = 1;
+						itemId = widgetItem.getItemId();
+					}
+				}
+				else if (WidgetInfo.CLUE_SCROLL_REWARD_ITEM_CONTAINER.getGroupId() == widgetGroup)
+				{
+					Widget[] children = widget.getDynamicChildren();
+					if (pendingExamine.getActionParam() < children.length)
+					{
+						Widget widgetItem = children[pendingExamine.getActionParam()];
+						quantity = widgetItem.getItemQuantity();
+						itemId = widgetItem.getItemId();
+					}
 				}
 			}
 		}
@@ -337,66 +337,66 @@ public class ExaminePlugin extends Plugin
 		if (gePrice > 0 || alchPrice > 0)
 		{
 			final ChatMessageBuilder message = new ChatMessageBuilder()
-				.append(ChatColorType.NORMAL)
-				.append("Price of ")
-				.append(ChatColorType.HIGHLIGHT);
+					.append(ChatColorType.NORMAL)
+					.append("Price of ")
+					.append(ChatColorType.HIGHLIGHT);
 
 			if (quantity > 1)
 			{
 				message
-					.append(StackFormatter.formatNumber(quantity))
-					.append(" x ");
+						.append(StackFormatter.formatNumber(quantity))
+						.append(" x ");
 			}
 
 			message
-				.append(itemComposition.getName())
-				.append(ChatColorType.NORMAL)
-				.append(":");
+					.append(itemComposition.getName())
+					.append(ChatColorType.NORMAL)
+					.append(":");
 
 			if (gePrice > 0)
 			{
 				message
-					.append(ChatColorType.NORMAL)
-					.append(" GE average ")
-					.append(ChatColorType.HIGHLIGHT)
-					.append(StackFormatter.formatNumber(gePrice * quantity));
+						.append(ChatColorType.NORMAL)
+						.append(" GE average ")
+						.append(ChatColorType.HIGHLIGHT)
+						.append(StackFormatter.formatNumber(gePrice * quantity));
 			}
 
 			if (quantity > 1)
 			{
 				message
-					.append(ChatColorType.NORMAL)
-					.append(" (")
-					.append(ChatColorType.HIGHLIGHT)
-					.append(StackFormatter.formatNumber(gePrice))
-					.append(ChatColorType.NORMAL)
-					.append("ea)");
+						.append(ChatColorType.NORMAL)
+						.append(" (")
+						.append(ChatColorType.HIGHLIGHT)
+						.append(StackFormatter.formatNumber(gePrice))
+						.append(ChatColorType.NORMAL)
+						.append("ea)");
 			}
 
 			if (alchPrice > 0)
 			{
 				message
-					.append(ChatColorType.NORMAL)
-					.append(" HA value ")
-					.append(ChatColorType.HIGHLIGHT)
-					.append(StackFormatter.formatNumber(alchPrice * quantity));
+						.append(ChatColorType.NORMAL)
+						.append(" HA value ")
+						.append(ChatColorType.HIGHLIGHT)
+						.append(StackFormatter.formatNumber(alchPrice * quantity));
 			}
 
 			if (quantity > 1)
 			{
 				message
-					.append(ChatColorType.NORMAL)
-					.append(" (")
-					.append(ChatColorType.HIGHLIGHT)
-					.append(StackFormatter.formatNumber(alchPrice))
-					.append(ChatColorType.NORMAL)
-					.append("ea)");
+						.append(ChatColorType.NORMAL)
+						.append(" (")
+						.append(ChatColorType.HIGHLIGHT)
+						.append(StackFormatter.formatNumber(alchPrice))
+						.append(ChatColorType.NORMAL)
+						.append("ea)");
 			}
 
 			chatMessageManager.queue(QueuedMessage.builder()
-				.type(ChatMessageType.EXAMINE_ITEM)
-				.runeLiteFormattedMessage(message.build())
-				.build());
+					.type(ChatMessageType.EXAMINE_ITEM)
+					.runeLiteFormattedMessage(message.build())
+					.build());
 		}
 	}
 
